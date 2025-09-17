@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Domain\Payments\GatewayManager;
 use App\Support\Idempotency;
 use Illuminate\Http\Request;
+use InvalidArgumentException;
 
 class PaymentWebhookController extends Controller
 {
@@ -14,7 +15,11 @@ class PaymentWebhookController extends Controller
         if (! Idempotency::claim($gateway, $raw)) {
             return response()->json(['ok'=>true,'duplicate'=>true]);
         }
-        $gateways->get($gateway)->handleWebhook($request);
+        try {
+            $gateways->get($gateway)->handleWebhook($request);
+        } catch (InvalidArgumentException $e) {
+            return response()->json(['error' => 'Gateway not found'], 404);
+        }
         return response()->json(['ok'=>true]);
     }
 }

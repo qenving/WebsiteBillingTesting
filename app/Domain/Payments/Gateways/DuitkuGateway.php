@@ -15,6 +15,7 @@ class DuitkuGateway extends AbstractGateway implements PaymentGateway
 {
     public function key(): string { return 'duitku'; }
     public function displayName(): string { return 'Duitku'; }
+    public function isConfigured(): bool { return (bool) (config('duitku.merchant_code') && config('duitku.api_key')); }
     protected function isSandbox(): bool { return (bool) config('duitku.sandbox', true); }
     protected function baseUrl(): string { return $this->isSandbox()? 'https://api-sandbox.duitku.com':'https://api-prod.duitku.com'; }
     public function createPayment(Invoice $invoice, array $options = []): Payment

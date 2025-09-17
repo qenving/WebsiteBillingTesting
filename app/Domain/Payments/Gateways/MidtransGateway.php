@@ -15,6 +15,7 @@ class MidtransGateway extends AbstractGateway implements PaymentGateway
 {
     public function key(): string { return 'midtrans'; }
     public function displayName(): string { return 'Midtrans'; }
+    public function isConfigured(): bool { return (bool) (config('midtrans.server_key') && config('midtrans.client_key')); }
     protected function isSandbox(): bool { return (bool) config('midtrans.sandbox', true); }
     protected function snapUrl(): string { return $this->isSandbox()? 'https://app.sandbox.midtrans.com/snap/v1/transactions':'https://app.midtrans.com/snap/v1/transactions'; }
     protected function statusUrl(string $orderId): string { return $this->isSandbox()? "https://api.sandbox.midtrans.com/v2/{$orderId}/status":"https://api.midtrans.com/v2/{$orderId}/status"; }

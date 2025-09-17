@@ -15,6 +15,7 @@ class TripayGateway extends AbstractGateway implements PaymentGateway
 {
     public function key(): string { return 'tripay'; }
     public function displayName(): string { return 'Tripay'; }
+    public function isConfigured(): bool { return (bool) (config('tripay.api_key') && config('tripay.private_key') && config('tripay.merchant_code')); }
     protected function isSandbox(): bool { return (bool) config('tripay.sandbox', true); }
     protected function baseUrl(): string { return $this->isSandbox()? 'https://tripay.co.id/api-sandbox':'https://tripay.co.id/api'; }
 

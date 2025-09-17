@@ -18,7 +18,8 @@ class OrderController extends Controller
     {
         $data=$request->validate(['product_id'=>'required|exists:products,id','billing_cycle'=>'sometimes|string|in:monthly,quarterly,semiannually,annually']);
         $user=Auth::user(); if(! $user) abort(401);
-        $client=Client::firstOrCreate(['user_id'=>$user->id]); $product=Product::findOrFail($data['product_id']);
+        $client=Client::firstOrCreate(['user_id'=>$user->id]);
+        $product=Product::where('is_active',true)->where('id',$data['product_id'])->firstOrFail();
         return DB::transaction(function() use($client,$product,$data){
             $service=Service::create(['client_id'=>$client->id,'product_id'=>$product->id,'status'=>'pending','billing_cycle'=>$data['billing_cycle']??'monthly','meta'=>['driver'=>'virtfusion','plan'=>$product->options]]);
             $subtotal=$product->base_price;

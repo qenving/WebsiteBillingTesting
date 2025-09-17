@@ -12,6 +12,7 @@ abstract class AbstractGateway implements PaymentGateway
 {
     abstract public function key(): string;
     abstract public function displayName(): string;
+    public function isConfigured(): bool { return true; }
     public function createPayment(Invoice $invoice, array $options = []): Payment { throw new RuntimeException('Not implemented'); }
     public function handleWebhook(Request $request): void { throw new RuntimeException('Not implemented'); }
 }
