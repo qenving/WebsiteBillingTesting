@@ -3,19 +3,17 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use App\Support\Settings;
 
 class AdminSettingsController extends Controller
 {
-    protected function requireAdmin(): void
+    public function __construct()
     {
-        $u = Auth::user(); if (! $u || ! $u->is_admin) abort(403);
+        $this->middleware(['auth', 'verified', 'admin']);
     }
 
     public function show()
     {
-        $this->requireAdmin();
         $data = [
             'branding_name' => Settings::get('branding.name', config('app.name')),
             'manual_instructions' => Settings::get('payments.manual.instructions', ""),
@@ -31,7 +29,6 @@ class AdminSettingsController extends Controller
 
     public function update(Request $request)
     {
-        $this->requireAdmin();
         $request->validate([
             'branding_name' => 'required|string|max:100',
             'manual_instructions' => 'nullable|string|max:5000',
@@ -48,19 +45,20 @@ class AdminSettingsController extends Controller
             'invoice_footer' => 'nullable|string|max:2000',
         ]);
         Settings::set('branding.name', $request->branding_name);
-        if ($request->filled('manual_instructions')) {
-            Settings::set('payments.manual.instructions', $request->manual_instructions);
-        }
+        Settings::set('payments.manual.instructions', (string) $request->input('manual_instructions', ''));
         Settings::set('company.name', (string) $request->company_name);
         Settings::set('company.address', (string) $request->company_address);
         Settings::set('company.tax_id', (string) $request->company_tax_id);
         Settings::set('company.email', (string) $request->company_email);
         Settings::set('company.phone', (string) $request->company_phone);
         Settings::set('company.logo_url', (string) $request->company_logo_url);
-        if ($request->filled('finance_tax_rate')) Settings::set('finance.tax_rate', (float) $request->finance_tax_rate, 'float');
-        if ($request->filled('invoice_number_prefix')) Settings::set('invoice.number_prefix', (string) $request->invoice_number_prefix);
-        if ($request->filled('invoice_number_date_format')) Settings::set('invoice.number_date_format', (string) $request->invoice_number_date_format);
-        if ($request->filled('invoice_sequence_scope')) Settings::set('invoice.sequence_scope', (string) $request->invoice_sequence_scope);
+
+        $taxRate = $request->input('finance_tax_rate');
+        Settings::set('finance.tax_rate', $taxRate === null ? 0.0 : (float) $taxRate, 'float');
+
+        Settings::set('invoice.number_prefix', (string) $request->input('invoice_number_prefix', 'INV'));
+        Settings::set('invoice.number_date_format', (string) $request->input('invoice_number_date_format', 'Ymd'));
+        Settings::set('invoice.sequence_scope', (string) $request->input('invoice_sequence_scope', 'daily'));
         Settings::set('invoice.footer', (string) $request->invoice_footer);
         return redirect()->back()->with('status', 'Settings saved');
     }

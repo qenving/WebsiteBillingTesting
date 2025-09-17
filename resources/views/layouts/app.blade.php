@@ -23,18 +23,24 @@
         <ul class="navbar-nav mr-auto">
           <li class="nav-item"><a class="nav-link" href="{{ url('/shop') }}">Shop</a></li>
         </ul>
-        @php $hideAuthNav = request()->is('install') || request()->is('install/*') || ! filter_var(env('APP_INSTALLED', false), FILTER_VALIDATE_BOOLEAN); @endphp
+        @php
+          $appInstalled = (bool) config('app.installed');
+          $hideAuthNav = request()->is('install') || request()->is('install/*') || ! $appInstalled;
+        @endphp
         @if (! $hideAuthNav)
         <ul class="navbar-nav ml-auto align-items-center">
           @guest
-            <li class="nav-item"><a class="nav-link" href="{{ route('login') }}">Login</a></li>
+            @if (Route::has('login'))
+              <li class="nav-item"><a class="nav-link" href="{{ route('login') }}">Login</a></li>
+            @endif
             @if (Route::has('register'))
               <li class="nav-item"><a class="nav-link" href="{{ route('register') }}">Register</a></li>
             @endif
           @else
             @php
               $client = optional(Auth::user())->client;
-              $unpaid = $client ? $client->invoices()->where('status','unpaid')->count() : 0;
+              $unpaid = $client ? $client->invoices()->whereIn('status',['unpaid','overdue'])->count() : 0;
+              $openTickets = $client ? $client->tickets()->where('status','!=','closed')->count() : 0;
             @endphp
             <li class="nav-item">
               <a class="nav-link" href="{{ url('/invoices') }}">Invoices
@@ -44,8 +50,24 @@
               </a>
             </li>
             <li class="nav-item"><a class="nav-link" href="{{ url('/services') }}">Services</a></li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ route('tickets.index') }}">Support
+                @if($openTickets>0)
+                  <span class="badge badge-pill badge-warning">{{ $openTickets }}</span>
+                @endif
+              </a>
+            </li>
             @if(optional(Auth::user())->is_admin)
-              <li class="nav-item"><a class="nav-link" href="{{ url('/admin/settings') }}">Admin</a></li>
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="adminMenu" role="button" data-toggle="dropdown">Admin</a>
+                <div class="dropdown-menu">
+                  <a class="dropdown-item" href="{{ route('admin.dashboard') }}">Dashboard</a>
+                  <a class="dropdown-item" href="{{ route('admin.clients.index') }}">Clients</a>
+                  <a class="dropdown-item" href="{{ route('admin.payments.index') }}">Payments</a>
+                  <a class="dropdown-item" href="{{ route('admin.tickets.index') }}">Support Tickets</a>
+                  <a class="dropdown-item" href="{{ route('admin.settings.show') }}">Settings</a>
+                </div>
+              </li>
             @endif
             <li class="nav-item dropdown">
               <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown">{{ Auth::user()->name }}</a>
@@ -68,5 +90,6 @@
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
   @endif
+  @stack('scripts')
 </body>
 </html>

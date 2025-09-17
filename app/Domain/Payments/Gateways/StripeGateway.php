@@ -13,6 +13,7 @@ class StripeGateway extends AbstractGateway implements PaymentGateway
 {
     public function key(): string { return 'stripe'; }
     public function displayName(): string { return 'Stripe'; }
+    public function isConfigured(): bool { return (bool) (config('stripe.secret') && config('stripe.public')); }
     public function createPayment(Invoice $invoice, array $options = []): Payment
     {
         \Stripe\Stripe::setApiKey((string) config('stripe.secret'));

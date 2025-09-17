@@ -9,6 +9,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use App\Domain\Provisioning\ProvisioningManager;
 use App\Models\Service;
+use App\Support\ServiceBilling;
 
 class ProvisionServiceJob implements ShouldQueue
 {
@@ -18,6 +19,10 @@ class ProvisionServiceJob implements ShouldQueue
     public function handle(ProvisioningManager $mgr)
     {
         $service=Service::find($this->serviceId); if(! $service || $service->status!=='pending') return;
-        $driverKey=$service->meta['driver']??'virtfusion'; $driver=$mgr->get($driverKey); $driver->create($service); $service->status='active'; $service->save();
+        $driverKey=$service->meta['driver']??'virtfusion'; $driver=$mgr->get($driverKey); $driver->create($service);
+        $service->status='active';
+        if(! $service->next_due_date){ $service->next_due_date=ServiceBilling::initialDueDate($service); }
+        $meta=$service->meta??[]; $meta['last_activated_at']=now()->toDateTimeString(); $meta['driver']=$driverKey; $service->meta=$meta;
+        $service->save();
     }
 }

@@ -5,7 +5,7 @@
   @if(session('status'))
     <div class="alert alert-success">{{ session('status') }}</div>
   @endif
-  <form method="POST" action="{{ url('/admin/settings') }}">
+  <form method="POST" action="{{ route('admin.settings.update') }}">
     @csrf
     <div class="card mb-3">
       <div class="card-header">Branding</div>

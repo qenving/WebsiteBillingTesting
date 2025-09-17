@@ -15,6 +15,7 @@ class XenditGateway extends AbstractGateway implements PaymentGateway
 {
     public function key(): string { return 'xendit'; }
     public function displayName(): string { return 'Xendit'; }
+    public function isConfigured(): bool { return (bool) (config('xendit.api_key') && config('xendit.callback_token')); }
     protected function apiKey(): string { return (string) config('xendit.api_key'); }
     public function createPayment(Invoice $invoice, array $options = []): Payment
     {

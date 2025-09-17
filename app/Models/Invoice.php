@@ -44,4 +44,38 @@ class Invoice extends Model
     public function client(){ return $this->belongsTo(Client::class); }
     public function items(){ return $this->hasMany(InvoiceItem::class); }
     public function payments(){ return $this->hasMany(Payment::class); }
+
+    public function completedPaymentsSum(): float
+    {
+        if ($this->relationLoaded('payments')) {
+            return (float) $this->payments->where('status', 'completed')->sum('amount');
+        }
+        return (float) $this->payments()->where('status', 'completed')->sum('amount');
+    }
+
+    public function balanceDue(): float
+    {
+        $due = round($this->total - $this->completedPaymentsSum(), 2);
+        return $due > 0 ? $due : 0.0;
+    }
+
+    public function refreshPaymentStatus(): void
+    {
+        $balance = $this->balanceDue();
+        if ($balance <= 0.0) {
+            if ($this->status !== 'paid') {
+                $this->status = 'paid';
+                $this->paid_at = now();
+                $this->saveQuietly();
+                event(new \App\Events\InvoicePaid($this->fresh()));
+            }
+            return;
+        }
+
+        if ($this->status === 'paid') {
+            $this->status = ($this->due_date && $this->due_date->isPast()) ? 'overdue' : 'unpaid';
+            $this->paid_at = null;
+            $this->saveQuietly();
+        }
+    }
 }

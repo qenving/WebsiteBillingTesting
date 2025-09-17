@@ -13,8 +13,14 @@ class Client extends Model
         'user_id','company','phone','address_line1','address_line2','city','state','country','postal_code','tax_id','credit_balance','currency'
     ];
 
+    protected $casts = [
+        'credit_balance' => 'float',
+    ];
+
     public function user(){ return $this->belongsTo(User::class); }
     public function services(){ return $this->hasMany(Service::class); }
     public function invoices(){ return $this->hasMany(Invoice::class); }
+    public function creditTransactions(){ return $this->hasMany(ClientCreditTransaction::class); }
+    public function tickets(){ return $this->hasMany(Ticket::class); }
 }
 

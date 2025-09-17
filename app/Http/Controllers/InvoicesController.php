@@ -22,7 +22,7 @@ class InvoicesController extends Controller
         if (! $invoice->client || $invoice->client->user_id !== $user->id) abort(403);
         $available = [];
         foreach ($gateways->all() as $k => $g) { $available[] = ['key'=>$k,'name'=>$g->displayName()]; }
-        return view('invoices.show', [ 'invoice'=>$invoice->load(['items','client.user']), 'gateways'=>$available ]);
+        return view('invoices.show', [ 'invoice'=>$invoice->load(['items','client.user','payments']), 'gateways'=>$available ]);
     }
 }
 

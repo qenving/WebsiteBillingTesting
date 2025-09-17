@@ -20,7 +20,14 @@
           @foreach($invoices as $inv)
             <tr>
               <td>{{ $inv->number }}</td>
-              <td><span class="badge badge-{{ $inv->status==='paid'?'success':($inv->status==='unpaid'?'warning':'secondary') }}">{{ ucfirst($inv->status) }}</span></td>
+              @php
+                $badge = [
+                  'paid' => 'success',
+                  'unpaid' => 'warning',
+                  'overdue' => 'danger',
+                ][$inv->status] ?? 'secondary';
+              @endphp
+              <td><span class="badge badge-{{ $badge }}">{{ ucfirst($inv->status) }}</span></td>
               <td>{{ number_format($inv->total,0) }} {{ $inv->currency }}</td>
               <td>{{ optional($inv->due_date)->format('Y-m-d') }}</td>
               <td class="text-right"><a href="{{ url('/invoices/'.$inv->id) }}" class="btn btn-sm btn-primary">View</a></td>
